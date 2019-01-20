@@ -1,5 +1,4 @@
 import json
-import csv
 
 from mubi import MUBI
 from letterboxd import Letterboxd
