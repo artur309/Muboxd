@@ -9,7 +9,7 @@ My list: https://letterboxd.com/sollicitudin/list/mubi-now-showing-vietnam-regio
 ```pip install -r requirements.txt```
 
 # Running
-For first time run, edit `credentials.json` file using your account information. We use cookie data for MUBI and account detail for Letterboxd. Also, provide your Letterboxd link, get the edit link (with /edit/ at the end)
+For first time run, edit `credentials.json` file using your account information. We use cookie data for MUBI and account detail for Letterboxd. Also, provide your Letterboxd list link, get the edit link (with /edit/ at the end)
 
 Then run
 
