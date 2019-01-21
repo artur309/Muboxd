@@ -2,6 +2,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from time import sleep
+import logging
 
 class Letterboxd:
 
@@ -10,6 +11,7 @@ class Letterboxd:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36 Vivaldi/2.2.1388.37'
         })
+        self.logger = logging.getLogger('Letterboxd')
         self._log_in(userinfo)
 
     def _log_in(self, userinfo):
@@ -23,6 +25,7 @@ class Letterboxd:
         }
         self.session.post('https://letterboxd.com/user/login.do', data=data)
         self.session.cookies.update(self.session.cookies.get_dict())
+        self.logger.info('Logged in')
     
     def add_movies_to_playlist(self, playlist_link, movie_list, director_list, year):
         # fetch playlist data
@@ -42,6 +45,7 @@ class Letterboxd:
             'notes': list_desc,
             'entries': json.dumps([])
         }
+        self.logger.info('Cleaning list...')
         self.session.cookies.update(self.session.cookies.get_dict())
         self.session.post('https://letterboxd.com/s/save-list', data=formdata)
 
@@ -50,6 +54,7 @@ class Letterboxd:
         entries = []
 
         for movie in zip(movie_list, director_list, year):
+            self.logger.info(f'Getting {movie}...')
             params = {
                 'q': movie[0],
                 'limit': '100'
@@ -81,6 +86,7 @@ class Letterboxd:
         formdata['entries'] = json.dumps(entries)
         self.session.cookies.update(self.session.cookies.get_dict())
         self.session.post('https://letterboxd.com/s/save-list', data=formdata)
+        self.logger.info('Done adding movies to list')
 
 if __name__ == "__main__":
     import json

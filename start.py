@@ -1,9 +1,12 @@
 import json
+import logging.config as logconf
 
 from mubi import MUBI
 from letterboxd import Letterboxd
 
 if __name__ == "__main__":
+    logconf.fileConfig('logging.conf')
+
     with open('credentials.json') as f:
         data = json.load(f)
     mubi = MUBI(data['MUBI'])

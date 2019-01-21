@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from time import sleep
+import logging
 
 from utils import EmptyCatalogueException
 
@@ -11,6 +12,7 @@ class MUBI:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36 Vivaldi/2.2.1388.37'
         })
+        self.logger = logging.getLogger('MUBI')
         self.session.cookies.update(cookie)
 
     def _parse(self, htmlresponse):
@@ -33,6 +35,7 @@ class MUBI:
         for span in ls:
             year.append(span.string.split()[-1])
 
+        self.logger.info('Getting movies. Done.')
         return movies_list, director_list, year
 
     def get_movies(self):
@@ -40,9 +43,11 @@ class MUBI:
         movies_list = []        
         for _ in range(5):
             try:
+                self.logger.info('Getting movies...')
                 r = self.session.get(url)
                 movies_list, director_list, year = self._parse(r.text)
             except EmptyCatalogueException:
+                self.logger.info('Fail to get movies. Retrying...')
                 sleep(1)
             else:
                 return movies_list, director_list, year
