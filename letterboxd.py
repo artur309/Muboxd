@@ -3,6 +3,7 @@ import json
 from bs4 import BeautifulSoup
 from time import sleep
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Letterboxd:
 
@@ -53,35 +54,39 @@ class Letterboxd:
 
         entries = []
 
-        for movie in zip(movie_list, director_list, year):
-            self.logger.info(f'Getting {movie}...')
+        def get_movie(name, director, year):
+            self.logger.info(f'Getting {(name, director, year)}...')
             params = {
-                'q': movie[0],
+                'q': name,
                 'limit': '100'
             }
             r = self.session.get('https://letterboxd.com/s/autocompletefilm', params=params)
             js = r.json()
             if not js['result']:
-                continue
+                return ''
             ranked = []
             counter = 0
             for data in js['data']:
                 counter += 1
                 point = 2
-                if data['directors'] and data['directors'][0]['name'] == movie[1]:
+                if data['directors'] and data['directors'][0]['name'] == director:
                     point -= 1
-                if 'releaseYear' in data and data['releaseYear'] == movie[2]:
+                if 'releaseYear' in data and data['releaseYear'] == year:
                     point -= 1
                 if point == 0:
                     self.session.get(f"https://letterboxd.com/ajax/film:{data['id']}/filmlistentry")
-                    entries.append({"filmId": str(data['id'])})
-                    break
+                    return str(data['id'])
                 else:
                     ranked.append((data['id'], point, counter))
             else:
                 ranked.sort(key=lambda x: (x[1], x[2]))
                 self.session.get(f"https://letterboxd.com/ajax/film:{ranked[0][0]}/filmlistentry")
-                entries.append({"filmId": str(ranked[0][0])})
+                return str(ranked[0][0])
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_stuff = [executor.submit(get_movie, name, director, year) for name, director, year in zip(movie_list, director_list, year)]
+            for future in as_completed(future_to_stuff):
+                entries.append({"filmId": str(future.result())})
 
         formdata['entries'] = json.dumps(entries)
         self.session.cookies.update(self.session.cookies.get_dict())
